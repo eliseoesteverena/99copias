@@ -9,3 +9,5 @@ const supabase = window.supabase.createClient(
   SUPABASE_CONFIG.url,
   SUPABASE_CONFIG.anonKey
 );
+
+console.log(supabase);
