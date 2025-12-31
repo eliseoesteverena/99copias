@@ -32,12 +32,17 @@
 <script>
 const URL='https://vkthaoiurwuzuztpvuyl.supabase.co';
 const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrdGhhb2l1cnd1enV6dHB2dXlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcwODM3MDksImV4cCI6MjA4MjY1OTcwOX0.GfQWCwW4I_PeHijgafPhBmBAlS2lqT8aw9UaIY8TdXY';
-var sb=window.supabase.createClient(URL,KEY);
+var sb;
 var u=null;
+window.addEventListener('DOMContentLoaded',function(){
+if(typeof window.supabase==='undefined'){alert('❌ Supabase CDN no cargó');return;}
+sb=window.supabase.createClient(URL,KEY);
+});
 function show(id){document.getElementById(id).classList.remove('hidden')}
 function hide(id){document.getElementById(id).classList.add('hidden')}
 function log(txt){document.getElementById('output').textContent+=txt+'\n\n';show('results')}
 async function login(){
+if(!sb){alert('❌ Espera a que cargue');return;}
 let e=document.getElementById('email').value;
 let p=document.getElementById('pwd').value;
 let err=document.getElementById('loginErr');
