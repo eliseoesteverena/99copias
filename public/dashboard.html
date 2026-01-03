@@ -1,78 +1,55 @@
+<!-- public/dashboard.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard</title>
+  <title>Dashboard - Mi SaaS</title>
   
-  <!-- Estilos -->
   <link rel="stylesheet" href="/template/styles/template.css">
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
   <div id="app"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.js"></script>
   <script type="module">
     import { supabase } from './config.js';
     import { TemplateManager } from './template/core/template-manager.js';
     import { AuthIntegration } from './template/core/auth-integration.js';
     import { createDefaultConfig } from './template/config/default-config.js';
-
-    // Inicializar autenticación
-    const auth = new AuthIntegration(supabase);
-    const userData = await auth.init();
-
-    if (!userData) {
-      // auth.init() ya redirige al login si no hay sesión
-      throw new Error('No authenticated');
-    }
-
-    // Configurar template con página actual
-    const config = createDefaultConfig(window.location.pathname);
-    
-    // Marcar item activo del sidebar
-    const activeItem = config.sidebar.items.find(item => 
-      item.href === window.location.pathname
-    );
-    if (activeItem) {
-      activeItem.active = true;
-    }
-
-    // Actualizar título dinámico
-    config.topBar.title.text = 'Dashboard';
-
-    // Inicializar template
-    const template = new TemplateManager(config, auth);
-    await template.init(document.getElementById('app'));
-
-    // --- TU CÓDIGO ESPECÍFICO DEL DASHBOARD ---
-    const mainContent = document.getElementById('main-content');
-    
-    // Aquí agregas tu contenido específico usando mount.js
     import { el, mount } from './mount.js';
-    
-    mount(mainContent, 'div.container', { class: 'p-6' }, [
-      el('h1.text-3xl.font-bold.mb-4', {}, 'Bienvenido al Dashboard'),
-      el('div.grid.grid-cols-1.md:grid-cols-3.gap-4', {}, [
-        el('div.bg-white.p-6.rounded-lg.border', {}, [
-          el('h3.text-lg.font-semibold.mb-2', {}, 'Total Ventas'),
-          el('p.text-3xl.font-bold.text-primary', {}, '$12,345')
-        ]),
-        el('div.bg-white.p-6.rounded-lg.border', {}, [
-          el('h3.text-lg.font-semibold.mb-2', {}, 'Clientes'),
-          el('p.text-3xl.font-bold.text-primary', {}, '234')
-        ]),
-        el('div.bg-white.p-6.rounded-lg.border', {}, [
-          el('h3.text-lg.font-semibold.mb-2', {}, 'Trabajos Activos'),
-          el('p.text-3xl.font-bold.text-primary', {}, '18')
-        ])
-      ])
-    ]);
+
+    async function init() {
+      const auth = new AuthIntegration(supabase);
+      const userData = await auth.init();
+
+      if (!userData) return;
+
+      const config = createDefaultConfig(window.location.pathname);
+      config.topBar.title.text = 'Dashboard';
+      
+      const dashboardItem = config.sidebar.items.find(i => i.id === 'dashboard');
+      if (dashboardItem) dashboardItem.active = true;
+
+      const template = new TemplateManager(config, auth);
+      await template.init(document.getElementById('app'));
+
+      renderDashboardContent();
+    }
+
+    function renderDashboardContent() {
+      const mainContent = document.getElementById('main-content');
+      
+      mount(mainContent, 'div', { class: 'container p-6' }, [
+        el('h1', { class: 'text-3xl font-bold mb-6' }, 'Dashboard'),
+        el('p', {}, 'Contenido del dashboard aquí...')
+      ]);
+    }
+
+    init();
   </script>
 </body>
 </html>
-
 
 <!-- 
 <!DOCTYPE html>
