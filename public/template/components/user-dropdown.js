@@ -3,27 +3,32 @@ import { el } from '../../mount.js';
 export function renderUserDropdown(userConfig, state, auth) {
   let dropdownOpen = false;
   
-  const userContainer = el('div.topbar-user', {});
+  const userContainer = el('div', {
+    class: 'topbar-user',
+    style: { position: 'relative' }
+  });
   
   // User trigger (avatar + name)
   const userData = auth.getUserData();
   
-  const userTrigger = el('div.user-trigger', {
+  const userTrigger = el('div', {
+    class: 'user-trigger',
     onclick: (e) => {
       e.stopPropagation();
       dropdownOpen = !dropdownOpen;
       updateDropdown();
     }
   }, [
-    el('img.user-avatar', {
+    el('img', {
+      class: 'user-avatar',
       src: userData.avatar,
       alt: userData.name,
       onerror: (e) => {
-        // Fallback si la imagen falla
         e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name)}&background=064e3b&color=fff`;
       }
     }),
     el('span', {
+      class: 'user-name',
       style: {
         fontSize: '0.875rem',
         display: window.innerWidth < 640 ? 'none' : 'block'
@@ -32,16 +37,32 @@ export function renderUserDropdown(userConfig, state, auth) {
   ]);
   
   // Dropdown menu
-  const dropdown = el('div.user-dropdown', {
-    id: 'user-dropdown'
-  }, userConfig.dropdown.map(item => {
+  const dropdown = el('div', {
+    class: 'user-dropdown',
+    id: 'user-dropdown',
+    style: {
+      display: 'none' // Oculto por defecto
+    }
+  });
+  
+  // Crear cada item del dropdown individualmente
+  userConfig.dropdown.forEach(item => {
     if (item.type === 'divider') {
-      return el('div.user-dropdown-divider');
+      const divider = el('div', { class: 'user-dropdown-divider' });
+      dropdown.appendChild(divider);
+      return;
     }
     
-    return el('a.user-dropdown-item', {
+    const dropdownItem = el('a', {
       href: item.href || '#',
-      class: item.variant === 'danger' ? 'user-dropdown-item--danger' : '',
+      class: [
+        'user-dropdown-item',
+        item.variant === 'danger' ? 'user-dropdown-item--danger' : ''
+      ].filter(Boolean).join(' '),
+      style: {
+        display: 'flex', // ← CRITICAL
+        width: '100%' // ← CRITICAL
+      },
       onclick: (e) => {
         if (item.action === 'logout') {
           e.preventDefault();
@@ -53,13 +74,21 @@ export function renderUserDropdown(userConfig, state, auth) {
         updateDropdown();
       }
     }, [
-      el('span', {}, item.icon),
-      el('span', {}, item.label)
+      el('span', { class: 'user-dropdown-icon' }, item.icon),
+      el('span', { class: 'user-dropdown-label' }, item.label)
     ]);
-  }));
+    
+    dropdown.appendChild(dropdownItem);
+  });
   
   function updateDropdown() {
-    dropdown.classList.toggle('user-dropdown--open', dropdownOpen);
+    if (dropdownOpen) {
+      dropdown.style.display = 'block';
+      dropdown.classList.add('user-dropdown--open');
+    } else {
+      dropdown.style.display = 'none';
+      dropdown.classList.remove('user-dropdown--open');
+    }
   }
   
   async function handleLogout() {
@@ -70,8 +99,8 @@ export function renderUserDropdown(userConfig, state, auth) {
   }
   
   // Close dropdown when clicking outside
-  document.addEventListener('click', () => {
-    if (dropdownOpen) {
+  document.addEventListener('click', (e) => {
+    if (dropdownOpen && !userContainer.contains(e.target)) {
       dropdownOpen = false;
       updateDropdown();
     }
