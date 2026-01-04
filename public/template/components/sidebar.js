@@ -6,12 +6,21 @@ export function renderSidebar(config, state) {
   const isCollapsed = !state.state.sidebar.isOpen;
   const isMobile = window.innerWidth < 768;
   
-  const sidebar = el('aside.sidebar', {
+  // Construir clases CSS correctamente
+  const classes = ['sidebar'];
+  
+  if (isCollapsed) {
+    classes.push('sidebar--collapsed');
+  }
+  
+  if (isMobile) {
+    classes.push('sidebar--overlay');
+  }
+  
+  const sidebar = el('aside', {
     id: 'sidebar',
-    class: [
-      isCollapsed ? 'sidebar--collapsed' : '',
-      isMobile ? 'sidebar--overlay' : ''
-    ].filter(Boolean).join(' ')
+    class: classes.join(' '), // ← CORRECCIÓN: unir todas las clases
+    'aria-label': 'Menú de navegación'
   }, [
     // Sidebar content
     el('nav.sidebar-content', {
