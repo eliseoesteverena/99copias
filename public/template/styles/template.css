@@ -220,6 +220,12 @@
 }
 
 /* === SIDEBAR ITEMS === */
+.sidebar-item-container {
+  position: relative;
+  display: block; /* ← CRITICAL */
+  width: 100%;
+}
+
 .sidebar-item {
   display: flex;
   align-items: center;
@@ -229,7 +235,9 @@
   text-decoration: none;
   cursor: pointer;
   transition: background 0.2s;
-  white-space: nowrap;
+  position: relative;
+  width: 100%; /* ← CRITICAL */
+  box-sizing: border-box;
 }
 
 .sidebar-item:hover {
@@ -241,57 +249,80 @@
   color: #064e3b;
   font-weight: 500;
   border-left: 3px solid #064e3b;
+  padding-left: calc(1rem - 3px);
 }
 
 .sidebar-item-icon {
   font-size: 1.25rem;
   flex-shrink: 0;
   width: 24px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .sidebar-item-label {
   flex: 1;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-/* Ocultar labels en modo colapsado */
-.sidebar--collapsed .sidebar-item-label {
-  display: none;
+  font-size: 0.9375rem;
 }
 
 .sidebar-item-arrow {
-  font-size: 0.75rem;
+  font-size: 1rem;
   transition: transform 0.2s;
   margin-left: auto;
+  color: #9ca3af;
+  flex-shrink: 0;
 }
 
 .sidebar-item--expanded .sidebar-item-arrow {
   transform: rotate(90deg);
 }
 
-.sidebar--collapsed .sidebar-item-arrow {
-  display: none;
-}
-
 /* === SUBITEMS === */
 .sidebar-subitems {
-  display: none;
+  display: block; /* ← CRITICAL */
   background: #f9fafb;
+  width: 100%; /* ← CRITICAL */
 }
 
-.sidebar-item--expanded + .sidebar-subitems {
-  display: block;
+.sidebar-subitem {
+  display: flex !important; /* ← CRITICAL: Forzar flex en cada subitem */
+  padding-left: 3rem !important;
+  font-size: 0.875rem;
+  width: 100%; /* ← CRITICAL */
+  box-sizing: border-box;
+}
+
+.sidebar-subitem:hover {
+  background: #f3f4f6;
+}
+
+.sidebar-subitem .sidebar-item-icon {
+  font-size: 1rem;
+  width: 20px;
+}
+
+/* === MODO COLAPSADO === */
+.sidebar--collapsed .sidebar-item-label,
+.sidebar--collapsed .sidebar-item-arrow {
+  display: none;
 }
 
 .sidebar--collapsed .sidebar-subitems {
   display: none !important;
 }
 
-.sidebar-subitems .sidebar-item {
-  padding-left: 3rem;
-  font-size: 0.875rem;
+.sidebar--collapsed .sidebar-item {
+  justify-content: center;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.sidebar--collapsed .sidebar-item-icon {
+  margin: 0;
 }
 
 /* === SIDEBAR FOOTER === */

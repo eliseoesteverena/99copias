@@ -5,98 +5,149 @@ export function renderSidebarItem(item, state, isCollapsed) {
   const hasSubItems = item.subItems && item.subItems.length > 0;
   const isExpanded = state.state.sidebar.expandedItems.includes(item.id);
   
-  // Main item
-  const itemElement = el('a.sidebar-item', {
-    href: hasSubItems ? '#' : (item.href || '#'),
+  // Contenedor del item + subitems
+  const container = document.createElement('div');
+  container.className = 'sidebar-item-container';
+  
+  // Item principal
+  const itemElement = el(hasSubItems ? 'div' : 'a', {
+    href: hasSubItems ? undefined : (item.href || '#'),
     class: [
+      'sidebar-item',
       isActive ? 'sidebar-item--active' : '',
       hasSubItems && isExpanded ? 'sidebar-item--expanded' : ''
     ].filter(Boolean).join(' '),
     'data-tooltip': item.tooltip,
+    'data-item-id': item.id,
     onclick: (e) => {
       if (hasSubItems) {
         e.preventDefault();
-        toggleSubItems(item.id);
+        toggleSubItems(item.id, container);
+      } else if (window.innerWidth < 768) {
+        state.toggleSidebar();
       }
     }
   }, [
     // Icon
-    el('span.sidebar-item-icon', {},
-      typeof item.icon === 'string' ?
-      item.icon :
-      renderIcon(item.icon)
+    el('span', { class: 'sidebar-item-icon' },
+      typeof item.icon === 'string' ? item.icon : renderIcon(item.icon)
     ),
     
     // Label
-    el('span.sidebar-item-label', {}, item.label),
+    el('span', { class: 'sidebar-item-label' }, item.label),
     
-    // Arrow for subitems
-    hasSubItems ? el('span.sidebar-item-arrow', {}, '›') : null
+    // Arrow para subitems
+    hasSubItems ? el('span', { class: 'sidebar-item-arrow' }, '›') : null
   ].filter(Boolean));
   
-  // Tooltip for collapsed state
+  container.appendChild(itemElement);
+  
+  // SubItems container
+  if (hasSubItems) {
+    const subItemsContainer = el('div', {
+      class: 'sidebar-subitems',
+      style: {
+        display: isExpanded ? 'block' : 'none'
+      }
+    });
+    
+    // Crear cada subitem individualmente
+    item.subItems.forEach(subItem => {
+      const subItemEl = el('a', {
+        href: subItem.href || '#',
+        class: 'sidebar-item sidebar-subitem',
+        style: {
+          display: 'flex', // ← CRITICAL: Asegurar que sea flex block
+          width: '100%' // ← CRITICAL: Ancho completo
+        },
+        onclick: (e) => {
+          if (window.innerWidth < 768) {
+            state.toggleSidebar();
+          }
+        }
+      }, [
+        subItem.icon ? el('span', { class: 'sidebar-item-icon' }, subItem.icon) : null,
+        el('span', { class: 'sidebar-item-label' }, subItem.label)
+      ].filter(Boolean));
+      
+      subItemsContainer.appendChild(subItemEl);
+    });
+    
+    container.appendChild(subItemsContainer);
+  }
+  
+  // Tooltip para modo colapsado
   if (isCollapsed && item.tooltip) {
     itemElement.addEventListener('mouseenter', (e) => showTooltip(e, item.tooltip));
     itemElement.addEventListener('mouseleave', hideTooltip);
   }
   
-  // SubItems container
-  const subItemsElement = hasSubItems ? el('div.sidebar-subitems', {},
-    item.subItems.map(subItem =>
-      el('a.sidebar-item', {
-        href: subItem.href || '#',
-        style: { paddingLeft: '2.5rem' }
-      }, [
-        subItem.icon ? el('span.sidebar-item-icon', {}, subItem.icon) : null,
-        el('span.sidebar-item-label', {}, subItem.label)
-      ].filter(Boolean))
-    )
-  ) : null;
-  
-  function toggleSubItems(itemId) {
-    const index = state.state.sidebar.expandedItems.indexOf(itemId);
+  function toggleSubItems(itemId, container) {
+    const subItemsEl = container.querySelector('.sidebar-subitems');
+    const itemEl = container.querySelector('.sidebar-item');
     
-    if (index > -1) {
-      state.state.sidebar.expandedItems.splice(index, 1);
+    if (!subItemsEl) return;
+    
+    const isCurrentlyExpanded = state.state.sidebar.expandedItems.includes(itemId);
+    
+    if (isCurrentlyExpanded) {
+      // Cerrar
+      state.state.sidebar.expandedItems = state.state.sidebar.expandedItems.filter(id => id !== itemId);
+      subItemsEl.style.display = 'none';
+      itemEl.classList.remove('sidebar-item--expanded');
     } else {
+      // Abrir
       state.state.sidebar.expandedItems.push(itemId);
+      subItemsEl.style.display = 'block';
+      itemEl.classList.add('sidebar-item--expanded');
     }
     
-    itemElement.classList.toggle('sidebar-item--expanded');
-    if (subItemsElement) {
-      subItemsElement.style.display =
-        itemElement.classList.contains('sidebar-item--expanded') ? 'block' : 'none';
-    }
+    // Guardar estado
+    state.saveExpandedItems();
   }
   
-  // Return wrapper with item and subitems
-  if (hasSubItems) {
-    return el('div', {}, [itemElement, subItemsElement]);
-  }
-  
-  return itemElement;
+  return container;
 }
 
 function renderIcon(iconConfig) {
+  if (!iconConfig) return '';
+  
+  if (typeof iconConfig === 'string') {
+    return iconConfig;
+  }
+  
   if (iconConfig.type === 'svg') {
     const temp = document.createElement('div');
     temp.innerHTML = iconConfig.content;
     return temp.firstChild;
   }
-  return iconConfig.content;
+  
+  return iconConfig.content || '';
 }
 
 // Tooltip helpers
 let activeTooltip = null;
 
 function showTooltip(event, text) {
-  const rect = event.target.getBoundingClientRect();
+  hideTooltip();
   
-  activeTooltip = el('div.tooltip.tooltip--visible', {
+  const rect = event.currentTarget.getBoundingClientRect();
+  
+  activeTooltip = el('div', {
+    class: 'tooltip tooltip--visible',
     style: {
+      position: 'fixed',
       left: `${rect.right + 10}px`,
       top: `${rect.top + rect.height / 2}px`,
-      transform: 'translateY(-50%)'
+      transform: 'translateY(-50%)',
+      background: '#111827',
+      color: 'white',
+      padding: '0.5rem 0.75rem',
+      borderRadius: '0.375rem',
+      fontSize: '0.875rem',
+      whiteSpace: 'nowrap',
+      zIndex: '2000',
+      pointerEvents: 'none'
     }
   }, text);
   
@@ -104,8 +155,8 @@ function showTooltip(event, text) {
 }
 
 function hideTooltip() {
-  if (activeTooltip) {
-    activeTooltip.remove();
+  if (activeTooltip && activeTooltip.parentNode) {
+    activeTooltip.parentNode.removeChild(activeTooltip);
     activeTooltip = null;
   }
 }
