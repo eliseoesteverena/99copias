@@ -3,13 +3,15 @@ import { renderSearchBar } from './search-bar.js';
 import { renderUserDropdown } from './user-dropdown.js';
 
 export function renderTopBar(config, state, auth) {
-  const topbar = el('header.topbar', {
+  const topbar = el('header', {
+    class: 'topbar',
     id: 'topbar'
   }, [
     // Left section
-    el('div.topbar-left', {}, [
+    el('div', { class: 'topbar-left' }, [
       // Hamburger button
-      el('button.topbar-hamburger', {
+      el('button', {
+        class: 'topbar-hamburger',
         'aria-label': 'Toggle menu',
         onclick: () => state.toggleSidebar()
       }, [
@@ -17,32 +19,25 @@ export function renderTopBar(config, state, auth) {
       ]),
       
       // Page title
-      el('h1.topbar-title', {}, config.title.text)
+      el('h1', { class: 'topbar-title' }, config.title.text)
     ]),
     
     // Right section
-    el('div.topbar-right', {}, [
+    el('div', { class: 'topbar-right' }, [
       // Search bar
       config.search.enabled ? renderSearchBar(config.search, state) : null,
       
-      // Notifications (visual only)
+      // Notifications
       config.notifications.enabled ? el('button', {
         'aria-label': 'Notificaciones',
-        class: 'relative p-2 hover:bg-gray-100 rounded',
         onclick: config.notifications.onClick || (() => {
           alert('Funcionalidad de notificaciones próximamente');
         })
       }, [
         el('span', { style: { fontSize: '1.25rem' } }, '🔔'),
-        config.notifications.badge > 0 ? el('span', {
-          class: 'absolute top-1 right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center',
-          style: {
-            fontSize: '0.625rem',
-            minWidth: '20px',
-            height: '20px',
-            padding: '0 4px'
-          }
-        }, config.notifications.badge.toString()) : null
+        config.notifications.badge > 0 ?
+        el('span', { class: 'notification-badge' }, config.notifications.badge.toString()) :
+        null
       ].filter(Boolean)) : null,
       
       // User dropdown
